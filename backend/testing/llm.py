@@ -6,22 +6,116 @@ import pandas as pd
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import onnxruntime as ort
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-
 chat_session = None
+
+# ============================================================================
+# ONNX MODEL WRAPPER
+# ============================================================================
+
+class ONNXModelWrapper:
+    """Wrapper to make ONNX model compatible with SHAP."""
+    
+    def __init__(self, onnx_path: str):
+        """
+        Initialize ONNX model from file path.
+        
+        Args:
+            onnx_path: Path to the .onnx model file
+        """
+        self.session = ort.InferenceSession(onnx_path)
+        self.input_name = self.session.get_inputs()[0].name
+        self.output_name = self.session.get_outputs()[0].name
+        
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """
+        Make predictions using ONNX model.
+        
+        Args:
+            X: Input features as numpy array
+            
+        Returns:
+            Predictions as numpy array
+        """
+        # Ensure X is float32 (ONNX typically expects this)
+        if X.dtype != np.float32:
+            X = X.astype(np.float32)
+        
+        # Run inference
+        outputs = self.session.run([self.output_name], {self.input_name: X})
+        return outputs[0]
+    
+    def __call__(self, X: np.ndarray) -> np.ndarray:
+        """Allow calling the wrapper directly."""
+        return self.predict(X)
+
 
 # ============================================================================
 # SHAP COMPUTATION
 # ============================================================================
 
-def compute_shap_values(model, X_train: pd.DataFrame) -> shap.Explanation:
-    """Compute SHAP values using TreeExplainer (works for most models)."""
-    explainer = shap.TreeExplainer(model, X_train)
-    shap_values = explainer(X_train)
-    return shap_values
+def compute_shap_values(model_or_path, X_train: pd.DataFrame, 
+                       use_tree_explainer: bool = False,
+                       nsamples: int = 100) -> shap.Explanation:
+    """
+    Compute SHAP values for ONNX models or traditional ML models.
+    
+    Args:
+        model_or_path: Either a path to ONNX model (str) or a trained model object
+        X_train: Training data as DataFrame
+        use_tree_explainer: If True and model_or_path is not ONNX, use TreeExplainer
+        nsamples: Number of samples for KernelExplainer (lower = faster but less accurate)
+    
+    Returns:
+        SHAP Explanation object
+    """
+    # Check if it's an ONNX model path
+    if isinstance(model_or_path, str) and model_or_path.endswith('.onnx'):
+        print(f"Loading ONNX model from: {model_or_path}")
+        model_wrapper = ONNXModelWrapper(model_or_path)
+        
+        # Use a subset of training data as background for efficiency
+        background_size = min(100, len(X_train))
+        background = shap.sample(X_train, background_size)
+        
+        print(f"Using KernelExplainer with {nsamples} samples (this may take a while)...")
+        explainer = shap.KernelExplainer(model_wrapper.predict, background)
+        
+        # Compute SHAP values on a sample for speed (you can adjust this)
+        shap_sample_size = min(nsamples, len(X_train))
+        X_sample = shap.sample(X_train, shap_sample_size)
+        shap_values = explainer.shap_values(X_sample)
+        
+        # Convert to Explanation object for consistency
+        if isinstance(shap_values, list):
+            # Multi-output case
+            shap_values = np.array(shap_values).transpose(1, 2, 0)
+        
+        # Create Explanation object
+        explanation = shap.Explanation(
+            values=shap_values,
+            base_values=explainer.expected_value,
+            data=X_sample.values,
+            feature_names=X_train.columns.tolist()
+        )
+        
+        return explanation
+    
+    else:
+        # Traditional model - use TreeExplainer if requested
+        if use_tree_explainer:
+            print("Using TreeExplainer for traditional ML model...")
+            explainer = shap.TreeExplainer(model_or_path, X_train)
+        else:
+            print("Using default Explainer for traditional ML model...")
+            explainer = shap.Explainer(model_or_path, X_train)
+        
+        shap_values = explainer(X_train)
+        return shap_values
 
 
 # ============================================================================
@@ -215,12 +309,18 @@ def get_feature_importance(shap_values: shap.Explanation, X: pd.DataFrame,
     # Sort by importance
     indices = np.argsort(mean_abs_shap)[::-1]
     
+    # Get feature names - handle both DataFrame and array cases
+    if hasattr(shap_values, 'feature_names') and shap_values.feature_names is not None:
+        feature_names = shap_values.feature_names
+    else:
+        feature_names = X.columns if hasattr(X, 'columns') else [f'feature_{i}' for i in range(len(X[0]))]
+    
     results = []
     for rank, idx in enumerate(indices, 1):
         avg_impact = float(mean_shap[idx])
         results.append({
             'rank': rank,
-            'feature': X.columns[idx],
+            'feature': feature_names[idx],
             'importance': float(mean_abs_shap[idx]),
             'avg_impact': avg_impact,
             'impact_direction': 'increases' if avg_impact > 0 else 'decreases'
@@ -240,6 +340,12 @@ def get_feature_importance_per_class(shap_values: shap.Explanation, X: pd.DataFr
         2: [...]
     }
     """
+    # Get feature names
+    if hasattr(shap_values, 'feature_names') and shap_values.feature_names is not None:
+        feature_names = shap_values.feature_names
+    else:
+        feature_names = X.columns if hasattr(X, 'columns') else [f'feature_{i}' for i in range(len(X[0]))]
+    
     per_class_importance = {}
     
     for class_idx in range(n_classes):
@@ -254,7 +360,7 @@ def get_feature_importance_per_class(shap_values: shap.Explanation, X: pd.DataFr
             avg_impact = float(mean_shap[idx])
             class_features.append({
                 'rank': rank,
-                'feature': X.columns[idx],
+                'feature': feature_names[idx],
                 'importance': float(mean_abs_shap[idx]),
                 'avg_impact': avg_impact,
                 'impact_direction': 'increases' if avg_impact > 0 else 'decreases'
@@ -270,7 +376,15 @@ def get_feature_stats(X: pd.DataFrame) -> Dict[str, Dict]:
     Get basic statistics for each feature in the dataset.
     """
     stats = {}
-    for col in X.columns:
+    
+    # Handle both DataFrame and array
+    if hasattr(X, 'columns'):
+        columns = X.columns
+    else:
+        columns = [f'feature_{i}' for i in range(X.shape[1])]
+        X = pd.DataFrame(X, columns=columns)
+    
+    for col in columns:
         stats[col] = {
             'min': float(X[col].min()),
             'max': float(X[col].max()),
@@ -286,6 +400,16 @@ def explain_prediction(shap_values: shap.Explanation, X: pd.DataFrame,
     """
     Explain a single prediction by showing which features contributed most.
     """
+    # Get feature names
+    if hasattr(shap_values, 'feature_names') and shap_values.feature_names is not None:
+        feature_names = shap_values.feature_names
+    else:
+        feature_names = X.columns if hasattr(X, 'columns') else [f'feature_{i}' for i in range(len(X[0]))]
+    
+    # Convert X to DataFrame if needed
+    if not hasattr(X, 'columns'):
+        X = pd.DataFrame(X, columns=feature_names)
+    
     if model_info['task_type'] == 'multi_class' and model_info['target_class'] is None:
         # For multi-class, explain the predicted class
         if len(prediction.shape) > 0:
@@ -315,7 +439,7 @@ def explain_prediction(shap_values: shap.Explanation, X: pd.DataFrame,
     for idx in top_indices:
         contribution = float(sample_shap[idx])
         contributors.append({
-            'feature': X.columns[idx],
+            'feature': feature_names[idx],
             'value': float(X.iloc[sample_idx, idx]),
             'contribution': contribution,
             'effect': 'increases' if contribution > 0 else 'decreases'
@@ -426,14 +550,20 @@ def build_llm_data(shap_values: shap.Explanation, X: pd.DataFrame,
     # Get sample indices for detailed explanations
     sample_indices = get_sample_indices(predictions, n_samples)
     
+    # Get feature names
+    if hasattr(X, 'columns'):
+        feature_names = X.columns.tolist()
+    else:
+        feature_names = [f'feature_{i}' for i in range(X.shape[1])]
+    
     # Build the data package
     data = {
         'model_info': model_info,
         
         'dataset_info': {
             'n_samples': len(X),
-            'n_features': len(X.columns),
-            'feature_names': X.columns.tolist()
+            'n_features': X.shape[1],
+            'feature_names': feature_names
         },
         
         'predictions': get_prediction_summary(predictions, model_info),
@@ -532,11 +662,12 @@ def get_gemini_response(prompt: str) -> str:
             genai.configure(api_key=GEMINI_API_KEY)
             model = genai.GenerativeModel("gemini-2.5-flash")
             chat_session = model.start_chat(history=[])
-            print("New chart session started")
+            print("New chat session started")
         response = chat_session.send_message(prompt)
-        return response
+        return response.text
     except Exception as e:
         print(f"Error calling Gemini API: {e}")
+        return f"Error generating summary: {str(e)}"
 
 
 def generate_summary(data: Dict[str, Any]) -> str:
@@ -550,19 +681,31 @@ def generate_summary(data: Dict[str, Any]) -> str:
 # MAIN FUNCTION - USE THIS
 # ============================================================================
 
-def analyze_model(model, X_train: pd.DataFrame,
+def analyze_model(model_or_path, X_train: pd.DataFrame,
                  predictions: np.ndarray,
-                 n_sample_explanations: int = 5) -> Tuple[Dict, str]:
+                 n_sample_explanations: int = 5,
+                 nsamples: int = 100) -> Tuple[Dict, str]:
     """
     Complete SHAP analysis with LLM summary.
     
     Works for:
+    - ONNX models (pass path as string: "model.onnx")
     - Binary classification (predictions as probabilities or class labels)
     - Multi-class classification (predictions as probability matrix or class labels)
     - Regression (predictions as continuous values)
+    
+    Args:
+        model_or_path: Either path to ONNX model (str) or trained model object
+        X_train: Training data as DataFrame or numpy array
+        predictions: Model predictions on X_train
+        n_sample_explanations: Number of example predictions to explain
+        nsamples: Number of samples for SHAP KernelExplainer (for ONNX models)
+    
+    Returns:
+        Tuple of (data dict, summary string)
     """
     print("Computing SHAP values...")
-    shap_values = compute_shap_values(model, X_train)
+    shap_values = compute_shap_values(model_or_path, X_train, nsamples=nsamples)
     
     print("Extracting insights...")
     data = build_llm_data(shap_values, X_train, predictions, n_sample_explanations)
@@ -580,56 +723,53 @@ def analyze_model(model, X_train: pd.DataFrame,
 if __name__ == "__main__":
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.datasets import make_classification
+    import skl2onnx
+    from skl2onnx import convert_sklearn
+    from skl2onnx.common.data_types import FloatTensorType
     
     print("=" * 80)
-    print("TESTING BINARY CLASSIFICATION")
+    print("TESTING WITH ONNX MODEL")
     print("=" * 80)
     
-    # Binary classification
+    # Create and train a model
     X_train, y_train = make_classification(n_samples=1000, n_features=10, n_classes=2, random_state=42)
-    X_test, y_test = make_classification(n_samples=200, n_features=10, n_classes=2, random_state=43)
-    X_train = pd.DataFrame(X_train, columns=[f'feature_{i}' for i in range(10)])
-    X_test = pd.DataFrame(X_test, columns=[f'feature_{i}' for i in range(10)])
+    X_train_df = pd.DataFrame(X_train, columns=[f'feature_{i}' for i in range(10)])
     
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)
     model.fit(X_train, y_train)
-    predictions = model.predict_proba(X_train)[:, 1]
     
+    # Convert to ONNX
+    initial_type = [('float_input', FloatTensorType([None, 10]))]
+    onnx_model = convert_sklearn(model, initial_types=initial_type)
+    
+    # Save ONNX model
+    onnx_path = "test_model.onnx"
+    with open(onnx_path, "wb") as f:
+        f.write(onnx_model.SerializeToString())
+    print(f"ONNX model saved to {onnx_path}")
+    
+    # Test ONNX wrapper
+    wrapper = ONNXModelWrapper(onnx_path)
+    predictions_onnx = wrapper.predict(X_train.astype(np.float32))
+    print(f"ONNX predictions shape: {predictions_onnx.shape}")
+    
+    # Analyze the ONNX model
+    print("\nAnalyzing ONNX model with SHAP...")
     data, summary = analyze_model(
-        model=model,
-        X_train=X_train,
-        predictions=predictions
+        model_or_path=onnx_path,
+        X_train=X_train_df,
+        predictions=predictions_onnx,
+        n_sample_explanations=3,
+        nsamples=50  # Lower for faster testing
     )
     
-    print("\nBINARY CLASSIFICATION SUMMARY:")
+    print("\nONNX MODEL ANALYSIS SUMMARY:")
     print("=" * 80)
     print(summary)
     print("=" * 80)
     
-    print("\n\n")
-    print("=" * 80)
-    print("TESTING MULTI-CLASS CLASSIFICATION")
-    print("=" * 80)
-    
-    # Multi-class classification
-    X_train_mc, y_train_mc = make_classification(n_samples=1000, n_features=10, n_classes=4, 
-                                                  n_informative=8, random_state=42)
-    X_test_mc, y_test_mc = make_classification(n_samples=200, n_features=10, n_classes=4,
-                                                n_informative=8, random_state=43)
-    X_train_mc = pd.DataFrame(X_train_mc, columns=[f'feature_{i}' for i in range(10)])
-    X_test_mc = pd.DataFrame(X_test_mc, columns=[f'feature_{i}' for i in range(10)])
-    
-    model_mc = RandomForestClassifier(n_estimators=100, random_state=42)
-    model_mc.fit(X_train_mc, y_train_mc)
-    predictions_mc = model_mc.predict_proba(X_train_mc)
-    
-    data_mc, summary_mc = analyze_model(
-        model=model_mc,
-        X_train=X_train_mc,
-        predictions=predictions_mc
-    )
-    
-    print("\nMULTI-CLASS CLASSIFICATION SUMMARY:")
-    print("=" * 80)
-    print(summary_mc)
-    print("=" * 80)
+    # Clean up
+    import os
+    if os.path.exists(onnx_path):
+        os.remove(onnx_path)
+        print(f"\nCleaned up {onnx_path}")
