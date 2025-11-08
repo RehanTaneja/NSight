@@ -1,0 +1,14 @@
+{
+  "name": "nsight-frontend",
+  "private": false,
+  "version": "0.0.0",
+  "source": "src/index.html",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "parcel": "^2.14.0"
+  }
+}
