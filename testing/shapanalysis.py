@@ -1,3 +1,15 @@
+import os
+import shap
+import numpy as np
+import pandas as pd
+import onnxruntime as ort
+from flask import Flask, request, render_template, jsonify
+from werkzeug.utils import secure_filename
+import matplotlib.pyplot as plt
+import io
+import base64
+
+
 def run_shap_analysis(model_path, data_path):
     # Load the model using onnxruntime
     session = ort.InferenceSession(model_path)
@@ -33,3 +45,6 @@ def run_shap_analysis(model_path, data_path):
     buf.close()
 
     return f"data:image/png;base64,{img_str}"
+
+
+run_shap_analysis('backend/decision_tree.onnx','backend/train_X.csv')
