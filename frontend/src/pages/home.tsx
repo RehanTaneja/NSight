@@ -8,24 +8,24 @@ export default function HomePage() {
 
   const features = [
     {
-      title: "Generate text summaries instantly",
+      title: "Easy to use",
       icon: "✨",
-      description: "Use the AI to generate text summaries instantly."
+      description: "Run SHAP analysis without the need to install or configure anything"
     },
     {
       title: "Analyze data and visualize graphs",
       icon: "📊",
-      description: "Use the AI to analyze data and visualize graphs."
+      description: "See what features contribute most to model predictions"
     },
     {
-      title: "Answer questions using AI models",
+      title: "Generate text summaries instantly",
       icon: "🤖",
-      description: "Use the AI to answer questions using AI models."
+      description: "Automatically generate a written explanation of how your model works"
     },
     {
-      title: "Integrates with multiple platforms",
+      title: "Works with multiple model types",
       icon: "🔗",
-      description: "Use the AI to integrates with multiple platforms."
+      description: "ONNX files are designed to be compatible with many popular machine learning and deep learning frameworks"
     }
   ];
 
@@ -39,7 +39,7 @@ export default function HomePage() {
             NSight
           </h2>
           <p className="text-xl text-gray-100 max-w-2xl mx-auto font-medium">
-            Welcome to your all-in-one AI tool. Generate, analyze, and visualize data quickly and effortlessly.
+            Welcome to your all-in-one machine learning analysis tool. Easily visualize and understand how your model makes decisions with insightful SHAP graphs and visualizations.
           </p>
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function HomePage() {
             Included Features
           </h2>
           <p className="text-gray-600 text-lg">
-            Everything you need to supercharge your workflow
+            Everything you need to understand your models
           </p>
         </div>
         
