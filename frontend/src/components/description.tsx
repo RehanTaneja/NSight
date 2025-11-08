@@ -10,14 +10,17 @@ export default function Description({ text }: DescriptionProps) {
   return (
     <p
       className="
-        text-gray-700 
-        text-base 
+        text-gray-700
+        text-base
         leading-relaxed
         break-words
         border border-gray-100
         rounded-lg
         shadow-sm
-        p-4
+        py-4
+        px-4
+        my-4
+        mx-4
         bg-white
       "
     >

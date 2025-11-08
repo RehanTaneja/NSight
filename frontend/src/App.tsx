@@ -1,14 +1,11 @@
-import './App.css'
+import React from "react";
+import Layout from "./pages/layout";
 import HomePage from "./pages/home";
-import Layout from './pages/layout';
 
-function App() {
-
+export default function App() {
   return (
     <Layout>
       <HomePage />
     </Layout>
-  )
+  );
 }
-
-export default App
