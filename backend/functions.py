@@ -8,7 +8,8 @@ from werkzeug.utils import secure_filename
 import matplotlib.pyplot as plt
 import io
 import base64
-def make_waterfall_thing(model_path, data_path):
+
+def make_waterfall_plot(model_path, data_path):
     # Load the model using onnxruntime
     session = ort.InferenceSession(model_path)
 
@@ -102,24 +103,3 @@ def make_waterfall_thing(model_path, data_path):
     buf.close()
 
     return f"data:image/png;base64,{img_str}"
-
-
-
-# Example usage
-run_shap_analysis('sample stuff/decision_tree.onnx', 'backend/train_X.csv')
-
-from PIL import Image
-import io
-import base64
-
-# Call the existing function to get the base64 image string
-img_base64 = run_shap_analysis('sample stuff/decision_tree.onnx', 'backend/train_X.csv')
-
-# Decode the base64 string to image data
-img_data = base64.b64decode(img_base64.split(',')[1])  # Remove the "data:image/png;base64," part
-
-# Open the image using PIL
-img = Image.open(io.BytesIO(img_data))
-
-# Display the image
-img.show()
