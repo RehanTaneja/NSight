@@ -28,7 +28,7 @@ def index():
 
 @app.route('/test_image')
 def testing():
-    return render_template('result.html', shap_image=shap_image)
+    return render_template('result.html', shap_image='/home')
 
 # Route to handle file upload
 @app.route('/upload', methods=['POST'])
