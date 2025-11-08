@@ -1,6 +1,11 @@
 'use client';
+import { useEffect } from 'react';
 
 export default function HomePage() {
+  useEffect(() => {
+    document.title = "NSight"; // Set the title when the component is mounted
+  }, []);
+
   const features = [
     {
       title: "Generate text summaries instantly",
