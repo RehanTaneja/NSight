@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload ONNX Model and Training Data</title>
+</head>
+<body>
+    <h1>Upload Your ONNX Model and Training Data</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="model">Choose an ONNX model:</label>
+        <input type="file" name="model" id="model" accept=".onnx" required>
+        <br>
+        <label for="data">Choose training data (CSV format):</label>
+        <input type="file" name="data" id="data" accept=".csv" required>
+        <br>
+        <button type="submit">Upload</button>
+    </form>
+</body>
+</html>
