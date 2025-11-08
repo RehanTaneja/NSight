@@ -119,6 +119,7 @@ def make_bar_plot(model_path, data_path):
 
 
 
+
 # Example usage
 # make_bar_plot('sample stuff/decision_tree.onnx', 'backend/train_X.csv')
 
@@ -127,10 +128,11 @@ import io
 import base64
 
 # Call the existing function to get the base64 image string
-img_base64 = make_bar_plot('sample stuff/decision_tree.onnx', 'backend/train_X.csv')
+# Get the first base64 string from the list
+img_base64 = make_bar_plot('sample stuff/decision_tree.onnx', 'backend/train_X.csv')[0]
 
 # Decode the base64 string to image data
-img_data = base64.b64decode(img_base64.split(',')[1])  # Remove the "data:image/png;base64," part
+img_data = base64.b64decode(img_base64.split(','))  # Remove the "data:image/png;base64," part
 
 # Open the image using PIL
 img = Image.open(io.BytesIO(img_data))
