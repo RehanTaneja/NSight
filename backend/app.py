@@ -45,13 +45,13 @@ def allowed_file(filename):
 @app.route("/upload", methods=["POST"])
 def upload_file():
     if "model" not in request.files or "data" not in request.files:
-        return jsonify({"error": "No model or data file part"})
+        return jsonify({"error": "No model or data file part"}), 400
 
     model_file = request.files["model"]
     data_file = request.files["data"]
 
     if model_file.filename == "" or data_file.filename == "":
-        return jsonify({"error": "No selected model or data file"})
+        return jsonify({"error": "No selected model or data file"}), 400
 
     if (
         model_file
@@ -81,9 +81,9 @@ def upload_file():
                 }
             )
         except Exception as e:
-            return jsonify({"error": f"Error processing files: {str(e)}"})
+            return jsonify({"error": f"Error processing files: {str(e)}"}), 500
 
-    return jsonify({"error": "Invalid file format"})
+    return jsonify({"error": "Invalid file format"}), 400
 
 
 def run_shap_analysis(model_path, data_path):

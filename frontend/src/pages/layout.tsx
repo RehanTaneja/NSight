@@ -3,7 +3,7 @@
 import React from "react";
 import NavBar from "../layout/navbar"; // Adjust import path as needed
 import "../layout/layoutStyles.css";
-
+import "../index.css"
 interface LayoutProps {
   readonly children: React.ReactNode;
   readonly currentPage: string;

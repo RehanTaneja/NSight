@@ -11,11 +11,11 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.dotted-divider-large {
-  border: none;
-  height: 2px;
-  background-image: radial-gradient(circle, #9ca3af 1.5px, transparent 1.5px);
-  background-size: 8px 8px; /* Controls spacing */
-  background-position: 0 0;
-  background-repeat: repeat-x;
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }

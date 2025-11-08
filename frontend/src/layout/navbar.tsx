@@ -14,7 +14,7 @@ export default function NavBar({ currentPage, setCurrentPage }: NavBarProps) {
         <div className="flex justify-between h-20">
           <div className="flex items-center space-x-8">
             {/* Logo/Brand */}
-            <div className="flex-shrink-0 flex items-center">
+            <div className="shrink-0 flex items-center">
               <span className="text-white text-4xl font-bold">NSight</span>
             </div>
             
@@ -25,7 +25,7 @@ export default function NavBar({ currentPage, setCurrentPage }: NavBarProps) {
                 className={`
                   inline-flex items-center px-6 py-3 rounded-lg text-lg font-semibold transition-all duration-300
                   ${currentPage === 'home' 
-                    ? '!bg-white !text-blue-600 !border-white shadow-md' 
+                    ? 'bg-white! text-blue-600! border-white! shadow-md' 
                     : 'bg-white text-blue-600 border-blue-500 hover:bg-blue-500 hover:text-white hover:border-blue-500'
                   }
                 `}
@@ -41,7 +41,7 @@ export default function NavBar({ currentPage, setCurrentPage }: NavBarProps) {
                 className={`
                   inline-flex items-center px-6 py-3 rounded-lg text-lg font-semibold transition-all duration-300
                   ${currentPage === 'upload' 
-                    ? '!bg-white !text-blue-600 !border-white shadow-md' 
+                    ? 'bg-white! text-blue-600! border-white! shadow-md' 
                     : 'bg-white text-blue-600 border-blue-500 hover:bg-blue-500 hover:text-white hover:border-blue-500'
                   }
                 `}
@@ -56,7 +56,7 @@ export default function NavBar({ currentPage, setCurrentPage }: NavBarProps) {
 
           {/* Optional: User menu or additional buttons */}
           <div className="flex items-center space-x-4">
-            <Button className="!bg-blue-700 !text-white !border-blue-700 hover:!bg-blue-800 hover:!border-blue-800">
+            <Button className="bg-blue-700! text-white! border-blue-700! hover:bg-blue-800! hover:border-blue-800!">
               Settings
             </Button>
           </div>

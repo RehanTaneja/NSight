@@ -3,11 +3,11 @@
 import React from 'react';
 
 interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  type?: 'button' | 'submit' | 'reset';
-  disabled?: boolean;
-  className?: string;
+  readonly children: React.ReactNode;
+  readonly onClick?: () => void;
+  readonly type?: 'button' | 'submit' | 'reset';
+  readonly disabled?: boolean;
+  readonly className?: string;
 }
 
 export default function Button({ 
