@@ -166,25 +166,38 @@ const handleUploadAndAnalyze = async () => {
         </button>
       </div>
 
+      <div className="border-t border-gray-400 border-dotted w-4/5 mx-auto my-14"></div>
+
       {/* Graph Components */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Waterfall Plot</h3>
-          <Graph 
-            src={uploadResult.waterfall}
-            alt="SHAP Waterfall Plot"
-            className="w-full h-auto border rounded"
-          />
+      <div className="flex flex-col items-center gap-8">
+        {/* Waterfall Plot Container */}
+        <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-linear-to-br from-blue-100 to-purple-100">
+          <div className="text-center mb-6 ">
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">Waterfall Plot</h3>
+            <p className="text-gray-600 text-sm">Feature importance visualization</p>
+            <Graph 
+              src={uploadResult.waterfall}
+              alt="SHAP Waterfall Plot"
+              className="w-full h-auto rounded-lg"
+              containerClassName="flex justify-center"
+            />
+          </div>
         </div>
         
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Bar Plot</h3>
-          <Graph 
-            src={uploadResult.bar}
-            alt="SHAP Bar Plot" 
-            className="w-full h-auto border rounded"
-          />
+        {/* Bar Plot Container */}
+        <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-linear-to-br from-blue-100 to-purple-100">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">Bar Plot</h3>
+            <p className="text-gray-600 text-sm">Feature contribution analysis</p>
+          </div>
+            <Graph 
+              src={uploadResult.bar}
+              alt="SHAP Bar Plot" 
+              className="w-full h-auto rounded-lg"
+              containerClassName="flex justify-center"
+            />
         </div>
+
       </div>
     </div>
   );

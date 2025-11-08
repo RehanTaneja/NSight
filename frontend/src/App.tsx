@@ -17,11 +17,18 @@ export default function App() {
     }
   };
 
-  return (
-    <UploadProvider> {/* Wrap everything with UploadProvider */}
-      <Layout currentPage={currentPage} setCurrentPage={setCurrentPage}>
-        {renderPage()}
-      </Layout>
-    </UploadProvider>
+return (
+    <div className="[scrollbar-width:none] [-ms-overflow-style:none] [-webkit-overflow-scrolling:touch]">
+      {/* Webkit requires custom CSS */}
+      <style>
+        {`::-webkit-scrollbar { display: none; }`}
+      </style>
+      
+      <UploadProvider>
+        <Layout currentPage={currentPage} setCurrentPage={setCurrentPage}>
+          {renderPage()}
+        </Layout>
+      </UploadProvider>
+    </div>
   );
 }

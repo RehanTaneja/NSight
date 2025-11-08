@@ -24,7 +24,7 @@ export default function Graph({
         alt={alt}
         width={width}
         height={height}
-        className={`rounded-md shadow-md ${className}`}
+        className={`rounded-md ${className}`}
       />
     </div>
   );

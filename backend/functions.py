@@ -5,6 +5,8 @@ import pandas as pd
 import onnxruntime as ort
 from flask import Flask, request, render_template, jsonify
 from werkzeug.utils import secure_filename
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
 import base64
