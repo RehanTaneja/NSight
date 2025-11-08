@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useUpload } from '../hooks/useUpload';
 import FileUpload from './fileUpload';
-import AnalysisResult from './analysisResult';
+import AnalysisResults from './analysisResult';
 import SkeletonLoader from './skeletonLoader';
 
 export default function Analyzer() {
@@ -23,7 +23,7 @@ export default function Analyzer() {
       if (!file.name.toLowerCase().endsWith('.onnx')) {
         setError({
           type: 'validation',
-          message: 'Invalid model file',
+          message: 'Invalid file type',
           details: 'Please select a valid .onnx model file'
         });
         return;
@@ -39,7 +39,7 @@ export default function Analyzer() {
       if (!file.name.toLowerCase().endsWith('.csv')) {
         setError({
           type: 'validation',
-          message: 'Invalid data file',
+          message: 'Invalid file type',
           details: 'Please select a valid .csv data file'
         });
         return;
@@ -87,38 +87,12 @@ export default function Analyzer() {
           dataFilename: dataFile.name
         });
       } else {
-        console.error('Upload failed with status:', response.status, result.error);
-        
-        // Map backend errors to the four main types
-        if (response.status === 400) {
-          // All 400 errors are validation errors
-          setError({
-            type: 'validation',
-            message: 'Invalid request',
-            details: result.error || 'Please check your file selections and try again.'
-          });
-        } else if (response.status === 500) {
-          // All 500 errors are server errors
-          if (result.error?.includes('Error processing files') || result.error?.includes('SHAP')) {
-            setError({
-              type: 'server',
-              message: 'Analysis failed',
-              details: result.error || 'The SHAP analysis failed. Please check your model and data files are compatible.'
-            });
-          } else {
-            setError({
-              type: 'server',
-              message: 'Server error',
-              details: result.error || 'An internal server error occurred. Please try again later.'
-            });
-          }
-        } else {
-          setError({
-            type: 'server',
-            message: 'Server error',
-            details: result.error || `Server returned error: ${response.status}`
-          });
-        }
+        console.error('Upload failed:', result.error);
+        setError({
+          type: 'server',
+          message: 'Analysis failed',
+          details: result.error || 'Server returned an error'
+        });
         setUploadResult(null);
       }
     } catch (error) {
@@ -126,20 +100,14 @@ export default function Analyzer() {
       if (error instanceof TypeError && error.message.includes('fetch')) {
         setError({
           type: 'network',
-          message: 'Connection failed',
-          details: 'Unable to connect to the analysis server. Please ensure the backend service is running.'
-        });
-      } else if (error instanceof SyntaxError) {
-        setError({
-          type: 'server',
-          message: 'Invalid server response',
-          details: 'The server returned an invalid response. Please check if the backend is functioning correctly.'
+          message: 'Connection error',
+          details: 'Unable to connect to the server. Please check if the backend service is running.'
         });
       } else {
         setError({
           type: 'upload',
           message: 'Upload failed',
-          details: 'An unexpected error occurred while uploading files. Please try again.'
+          details: 'An unexpected error occurred during file upload'
         });
       }
       setUploadResult(null);
@@ -162,7 +130,7 @@ export default function Analyzer() {
   const isUploadDisabled = !modelFile || !dataFile;
 
   if (isUploading) {
-    return <SkeletonLoader />;
+    return <SkeletonLoader />; // You can extract this too
   }
 
   if (!uploadResult) {
@@ -181,7 +149,7 @@ export default function Analyzer() {
   }
 
   return (
-    <AnalysisResult
+    <AnalysisResults
       uploadResult={uploadResult}
       error={error}
       onClearResults={clearResults}

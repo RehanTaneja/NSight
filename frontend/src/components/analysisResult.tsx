@@ -10,24 +10,24 @@ interface UploadResult {
 }
 
 interface ErrorState {
-  readonly type: 'validation' | 'upload' | 'server' | 'network' | null;
-  readonly message: string;
-  readonly details?: string;
+  type: 'validation' | 'upload' | 'server' | 'network' | null;
+  message: string;
+  details?: string;
 }
 
-interface AnalysisResultProps {
+interface AnalysisResultsProps {
   readonly uploadResult: UploadResult | null;
   readonly error: ErrorState;
   readonly onClearResults: () => void;
   readonly onClearError: () => void;
 }
 
-export default function AnalysisResult({ 
+export default function AnalysisResults({ 
   uploadResult, 
   error, 
   onClearResults, 
   onClearError 
-}: AnalysisResultProps) {
+}: AnalysisResultsProps) {
   
   // Error display component
   const ErrorDisplay = () => {
