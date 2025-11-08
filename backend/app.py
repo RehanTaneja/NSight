@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 import matplotlib.pyplot as plt
 import io
 import base64
-from functions import make_waterfall_plot
+from functions import make_waterfall_plot, make_bar_plot
 
 # Flask app setup
 app = Flask(__name__)
@@ -54,8 +54,9 @@ def upload_file():
         # Perform SHAP analysis and plot the graph
         try:
             waterfall_image = make_waterfall_plot(model_filepath, data_filepath)
+            bar_plot_image = make_bar_plot(model_filepath,data_filepath)
 
-            return render_template('result.html', shap_image=waterfall_image)
+            return render_template('result.html', waterfall=waterfall_image,bar=bar_plot_image)
         except Exception as e:
             return jsonify({'error': f'Error processing files: {str(e)}'})
 

@@ -1,14 +1,12 @@
-import os
 import shap
-import numpy as np
-import pandas as pd
 import onnxruntime as ort
-from flask import Flask, request, render_template, jsonify
-from werkzeug.utils import secure_filename
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import io
 import base64
-def make_waterfall_thing(model_path, data_path):
+
+def make_bar_plot(model_path, data_path):
     # Load the model using onnxruntime
     session = ort.InferenceSession(model_path)
 
@@ -73,23 +71,38 @@ def make_waterfall_thing(model_path, data_path):
     # Compute SHAP values
     shap_values = explainer.shap_values(input_data)
 
-    # --- NEW: Waterfall Plot for the first instance and first output ---
-    # For multi-output models, we select the first output: shap_values[0, 0]
-    # For single-output models, you can use shap_values[0] as is.
+    # --- NEW: Generate a bar plot for feature importance ---
+    # If shap_values is a list (multi-output model), take the first output
+    if isinstance(shap_values, list):
+        shap_values = shap_values[0]
 
-    # Check if the model has multiple outputs (i.e., shap_values is a 2D array)
-    # Squeeze the extra dimension in shap_values to remove the 1 at the end
-    shap_values_first_instance = shap_values[0].squeeze()
+    # Calculate the mean absolute SHAP values for each feature
+    mean_abs_shap_values = np.mean(np.abs(shap_values), axis=0)
 
-    # Create the SHAP Explanation object
-    explanation = shap.Explanation(values=shap_values_first_instance,
-                                base_values=explainer.expected_value[0], 
-                                data=input_data[0], 
-                                feature_names=data.columns)
+    # Print shapes of data.columns and mean_abs_shap_values for debugging
+    print("Shape of data.columns:", data.columns.shape)
+    print("Shape of mean_abs_shap_values:", mean_abs_shap_values.shape)
 
-    # Generate the waterfall plot
-    fig, ax = plt.subplots(figsize=(12, 8))  # Larger figure for better readability
-    shap.waterfall_plot(explanation)
+    # Ensure mean_abs_shap_values is 1D
+    mean_abs_shap_values = mean_abs_shap_values.flatten()  # Flatten if it's 2D
+
+    # Ensure data.columns is 1D (convert to list if necessary)
+    feature_names = list(data.columns)
+
+    # Now we can create the DataFrame
+    feature_importance = pd.DataFrame({
+        'Feature': feature_names,
+        'Mean |SHAP Value|': mean_abs_shap_values
+    })
+
+    # Sort the features by their importance (mean absolute SHAP value)
+    feature_importance = feature_importance.sort_values(by='Mean |SHAP Value|', ascending=False)
+
+    # Create a bar plot for feature importance
+    fig, ax = plt.subplots(figsize=(12, 8))
+    ax.barh(feature_importance['Feature'], feature_importance['Mean |SHAP Value|'], color='skyblue')
+    ax.set_xlabel('Mean |SHAP Value|')
+    ax.set_title('Feature Importance (Bar Plot)')
 
     # Adjust layout to avoid clipping
     plt.tight_layout()
@@ -105,15 +118,16 @@ def make_waterfall_thing(model_path, data_path):
 
 
 
+
 # Example usage
-run_shap_analysis('sample stuff/decision_tree.onnx', 'backend/train_X.csv')
+# make_bar_plot('sample stuff/decision_tree.onnx', 'backend/train_X.csv')
 
 from PIL import Image
 import io
 import base64
 
 # Call the existing function to get the base64 image string
-img_base64 = run_shap_analysis('sample stuff/decision_tree.onnx', 'backend/train_X.csv')
+img_base64 = make_bar_plot('sample stuff/decision_tree.onnx', 'backend/train_X.csv')
 
 # Decode the base64 string to image data
 img_data = base64.b64decode(img_base64.split(',')[1])  # Remove the "data:image/png;base64," part
