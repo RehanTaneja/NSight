@@ -17,10 +17,10 @@ chat_session = None
 # SHAP COMPUTATION
 # ============================================================================
 
-def compute_shap_values(model, X_train: pd.DataFrame, X_test: pd.DataFrame) -> shap.Explanation:
+def compute_shap_values(model, X_train: pd.DataFrame) -> shap.Explanation:
     """Compute SHAP values using TreeExplainer (works for most models)."""
     explainer = shap.TreeExplainer(model, X_train)
-    shap_values = explainer(X_test)
+    shap_values = explainer(X_train)
     return shap_values
 
 
@@ -550,7 +550,7 @@ def generate_summary(data: Dict[str, Any]) -> str:
 # MAIN FUNCTION - USE THIS
 # ============================================================================
 
-def analyze_model(model, X_train: pd.DataFrame, X_test: pd.DataFrame,
+def analyze_model(model, X_train: pd.DataFrame,
                  predictions: np.ndarray,
                  n_sample_explanations: int = 5) -> Tuple[Dict, str]:
     """
@@ -562,10 +562,10 @@ def analyze_model(model, X_train: pd.DataFrame, X_test: pd.DataFrame,
     - Regression (predictions as continuous values)
     """
     print("Computing SHAP values...")
-    shap_values = compute_shap_values(model, X_train, X_test)
+    shap_values = compute_shap_values(model, X_train)
     
     print("Extracting insights...")
-    data = build_llm_data(shap_values, X_test, predictions, n_sample_explanations)
+    data = build_llm_data(shap_values, X_train, predictions, n_sample_explanations)
     
     print("Generating summary...")
     summary = generate_summary(data)
@@ -593,12 +593,11 @@ if __name__ == "__main__":
     
     model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train, y_train)
-    predictions = model.predict_proba(X_test)[:, 1]
+    predictions = model.predict_proba(X_train)[:, 1]
     
     data, summary = analyze_model(
         model=model,
         X_train=X_train,
-        X_test=X_test,
         predictions=predictions
     )
     
@@ -622,12 +621,11 @@ if __name__ == "__main__":
     
     model_mc = RandomForestClassifier(n_estimators=100, random_state=42)
     model_mc.fit(X_train_mc, y_train_mc)
-    predictions_mc = model_mc.predict_proba(X_test_mc)
+    predictions_mc = model_mc.predict_proba(X_train_mc)
     
     data_mc, summary_mc = analyze_model(
         model=model_mc,
         X_train=X_train_mc,
-        X_test=X_test_mc,
         predictions=predictions_mc
     )
     
