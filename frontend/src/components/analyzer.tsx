@@ -83,6 +83,7 @@ export default function Analyzer() {
         setUploadResult({
           waterfall: result.waterfall,
           bar: result.bar,
+          summary: result.summary, // Add the summary field
           modelFilename: modelFile.name,
           dataFilename: dataFile.name
         });
@@ -130,7 +131,7 @@ export default function Analyzer() {
   const isUploadDisabled = !modelFile || !dataFile;
 
   if (isUploading) {
-    return <SkeletonLoader />; // You can extract this too
+    return <SkeletonLoader />;
   }
 
   if (!uploadResult) {

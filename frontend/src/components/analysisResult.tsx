@@ -2,11 +2,13 @@
 
 import Graph from './graph';
 
+// Match the context UploadResult interface exactly
 interface UploadResult {
   waterfall: string;
   bar: string;
-  modelFilename: string;
-  dataFilename: string;
+  summary?: string;
+  modelFilename?: string;  // Make optional to match context
+  dataFilename?: string;   // Make optional to match context
 }
 
 interface ErrorState {
@@ -141,11 +143,12 @@ export default function AnalysisResults({
       <h2 className="text-xl font-bold text-gray-800 mb-4">SHAP Analysis Results</h2>
       
       <div className="mb-6">
+        {/* Use fallback text if filenames are undefined */}
         <p className="text-gray-700">
-          Model: <span className="font-semibold">{uploadResult.modelFilename}</span>
+          Model: <span className="font-semibold">{uploadResult.modelFilename || 'Not specified'}</span>
         </p>
         <p className="text-gray-700">
-          Data: <span className="font-semibold">{uploadResult.dataFilename}</span>
+          Data: <span className="font-semibold">{uploadResult.dataFilename || 'Not specified'}</span>
         </p>
         
         {/* Re-upload button */}
@@ -159,11 +162,20 @@ export default function AnalysisResults({
 
       <div className="border-t border-gray-400 border-dotted w-4/5 mx-auto my-14"></div>
 
+      {/* Summary Section - Only show if summary exists */}
       {/* Graph Components */}
       <div className="flex flex-col items-center gap-8">
+        {/* Summary Section - Only show if summary exists */}
+        {uploadResult.summary && (
+          <div className="w-full max-w-4xl p-6 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-blue-800 mb-3 text-lg">AI Analysis Summary</h3>
+            <p className="text-blue-700">{uploadResult.summary}</p>
+          </div>
+        )}
+        
         {/* Waterfall Plot Container */}
-        <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-linear-to-br from-blue-100 to-purple-100">
-          <div className="text-center mb-6 ">
+        <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-gradient-to-br from-blue-100 to-purple-100">
+          <div className="text-center mb-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-2">Waterfall Plot</h3>
             <p className="text-gray-600 text-sm">Feature importance visualization</p>
           </div>
@@ -176,7 +188,7 @@ export default function AnalysisResults({
         </div>
         
         {/* Bar Plot Container */}
-        <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-linear-to-br from-blue-100 to-purple-100">
+        <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-gradient-to-br from-blue-100 to-purple-100">
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-2">Bar Plot</h3>
             <p className="text-gray-600 text-sm">Feature contribution analysis</p>

@@ -73,11 +73,12 @@ def upload_file():
         try:
             waterfall_image = make_waterfall_plot(model_filepath, data_filepath)
             bar_plot_image = make_bar_plot(model_filepath, data_filepath)
-
+            
             return jsonify(
                 {
                     "waterfall": waterfall_image,
                     "bar": bar_plot_image,
+                    "summary": "sample text",
                 }
             )
         except Exception as e:

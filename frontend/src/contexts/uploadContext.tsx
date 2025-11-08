@@ -3,8 +3,9 @@ import { createContext } from 'react';
 export interface UploadResult {
   waterfall: string;
   bar: string;
-  modelFilename: string;  // Remove optional
-  dataFilename: string;   // Remove optional
+  summary?: string; // Add this line
+  modelFilename?: string;
+  dataFilename?: string;
 }
 
 export interface UploadContextType {
