@@ -80,10 +80,26 @@ def run_shap_analysis(model_path, data_path):
     # Run the model to get the output for a sample batch (this could be adjusted based on the model)
     model_output = session.run(None, {input_name: input_data})[0]
 
-    # Set up SHAP explainer (using KernelExplainer in this case)
-    explainer = shap.KernelExplainer(lambda x: session.run(None, {input_name: x})[0], input_data)
+    # Summarize background to speed up Kernel SHAP and avoid object-dtype results
+    K = 50
+    if len(input_data) > K:
+        background = shap.sample(input_data, K)
+    else:
+        background = input_data
 
-    # Compute SHAP values
+    # Robust prediction wrapper to ensure numpy numeric outputs
+    def predict(x):
+        x_arr = np.asarray(x, dtype=np.float32)
+        if x_arr.ndim == 1:
+            x_arr = x_arr.reshape(1, -1)
+        out = session.run(None, {input_name: x_arr})[0]
+        out_arr = np.asarray(out)
+        if out_arr.ndim == 1:
+            out_arr = out_arr.reshape(-1, 1)
+        return out_arr.astype(np.float64)
+
+    # Create explainer and compute SHAP values
+    explainer = shap.KernelExplainer(predict, background)
     shap_values = explainer.shap_values(input_data)
 
     # Plot SHAP values (summary plot)
