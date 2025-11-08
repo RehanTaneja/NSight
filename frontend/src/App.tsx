@@ -1,8 +1,8 @@
 import { useState } from "react";
 import Layout from "./pages/layout";
 import HomePage from "./pages/home";
-import UploadPage from "./pages/uploadpage"
-
+import UploadPage from "./pages/uploadpage";
+import { UploadProvider } from "./contexts/uploadProvider"; 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
 
@@ -18,8 +18,10 @@ export default function App() {
   };
 
   return (
-    <Layout currentPage={currentPage} setCurrentPage={setCurrentPage}>
-      {renderPage()}
-    </Layout>
+    <UploadProvider> {/* Wrap everything with UploadProvider */}
+      <Layout currentPage={currentPage} setCurrentPage={setCurrentPage}>
+        {renderPage()}
+      </Layout>
+    </UploadProvider>
   );
 }

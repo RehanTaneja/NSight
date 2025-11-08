@@ -1,7 +1,7 @@
 'use client';
 
 import Button from '../components/button'; // Adjust import path as needed
-
+import "./layoutStyles.css"
 interface NavBarProps {
   readonly currentPage: string;
   readonly setCurrentPage: (page: string) => void;
@@ -9,7 +9,7 @@ interface NavBarProps {
 
 export default function NavBar({ currentPage, setCurrentPage }: NavBarProps) {
   return (
-    <nav className="bg-blue-600 shadow-lg py-4">
+    <nav className="bg-blue-600 shadow-lg py-4 no-scrollbar scrollbar:hide">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           <div className="flex items-center space-x-8">

@@ -1,26 +1,30 @@
 'use client';
 
 interface GraphProps {
-  readonly src: string;          // URL or path to the PNG image
-  readonly alt?: string;         // optional alt text
-  readonly width?: number;       // optional width
-  readonly height?: number;      // optional height
+  readonly src: string;
+  readonly alt?: string;
+  readonly width?: number;
+  readonly height?: number;
+  readonly className?: string;
+  readonly containerClassName?: string;
 }
 
 export default function Graph({
   src,
   alt = "Graph image",
   width,
-  height
+  height,
+  className = "",
+  containerClassName = "flex justify-center items-center"
 }: GraphProps) {
   return (
-    <div className="flex justify-center items-center">
+    <div className={containerClassName}>
       <img
         src={src}
         alt={alt}
         width={width}
         height={height}
-        className="rounded-md shadow-md"
+        className={`rounded-md shadow-md ${className}`}
       />
     </div>
   );

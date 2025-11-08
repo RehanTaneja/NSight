@@ -9,15 +9,21 @@ import matplotlib.pyplot as plt
 import io
 import base64
 from functions import make_waterfall_plot, make_bar_plot
+from flask_cors import CORS
 
 # Flask epp setup
 app = Flask(__name__, static_folder="../frontend/dist/", static_url_path="/")
+CORS(app) 
 
 # Allowed extensions for files
 ALLOWED_EXTENSIONS = {"onnx", "csv"}
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+
+@app.route("/test-cors")
+def test_cors():
+    return jsonify({"message": "CORS is working!"})
 
 @app.route("/<path:other>")
 def catch_all(other):
