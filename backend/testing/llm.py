@@ -3,8 +3,15 @@ import shap
 import json
 from typing import Dict, List, Any, Tuple
 import pandas as pd
+from google import genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
+chat_session = None
 # ============================================================================
 # SHAP COMPUTATION
 # ============================================================================
@@ -215,8 +222,18 @@ Keep the language clear and non-technical. Use specific numbers from the data. M
 """
     return prompt
 
+def get_gemini_response(prompt: str) -> str:
+    # client gets api key from GEMINI_API_KEY in .env
+    global chat_session
+    if chat_session is None:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        chat_session = model.start_chat(history=[])
+        print("New chart session started")
+    response = chat_session.send_message(prompt)
+    return response
 
-def generate_summary(data: Dict[str, Any], llm_function: callable, **llm_kwargs) -> str:
+def generate_summary(data: Dict[str, Any]) -> str:
     """
     Generate textual summary using an LLM.
     
@@ -229,17 +246,16 @@ def generate_summary(data: Dict[str, Any], llm_function: callable, **llm_kwargs)
         Generated text summary
     """
     prompt = create_prompt(data)
-    summary = llm_function(prompt, **llm_kwargs)
+    summary = get_gemini_response(prompt)
     return summary
-
 
 # ============================================================================
 # MAIN FUNCTION - USE THIS
 # ============================================================================
 
 def analyze_model(model, X_train: pd.DataFrame, X_test: pd.DataFrame,
-                 predictions: np.ndarray, llm_function: callable,
-                 n_sample_explanations: int = 5, **llm_kwargs) -> Tuple[Dict, str]:
+                 predictions: np.ndarray,
+                 n_sample_explanations: int = 5) -> Tuple[Dict, str]:
     """
     Complete SHAP analysis with LLM summary.
     
@@ -248,9 +264,7 @@ def analyze_model(model, X_train: pd.DataFrame, X_test: pd.DataFrame,
         X_train: Training data (for SHAP background)
         X_test: Test data to explain
         predictions: Model predictions on X_test
-        llm_function: Function to call your LLM, e.g., lambda prompt: gemini.generate(prompt)
         n_sample_explanations: How many example predictions to explain in detail
-        **llm_kwargs: Additional arguments for your LLM
     
     Returns:
         (data_dict, text_summary) - Both the structured data and human-readable summary
@@ -272,7 +286,7 @@ def analyze_model(model, X_train: pd.DataFrame, X_test: pd.DataFrame,
     data = build_llm_data(shap_values, X_test, predictions, n_sample_explanations)
     
     print("Generating summary...")
-    summary = generate_summary(data, llm_function, **llm_kwargs)
+    summary = generate_summary(data)
     
     return data, summary
 
