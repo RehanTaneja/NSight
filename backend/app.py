@@ -19,6 +19,11 @@ UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
+@app.route("/<path:other>")
+def catch_all(other):
+    return send_from_directory(app.static_folder, other)
+
+
 @app.route("/")
 def index():
     # Serve the index.html file from the React build
