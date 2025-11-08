@@ -21,9 +21,9 @@ export default function Layout({ children, currentPage, setCurrentPage }: Layout
       </main>
       <footer className="bg-gray-800 text-white py-15">
         <div className="max-w-6xl mx-auto px-8 text-center">
-          <p className="text-gray-400">
-            Contact us: xxxx@gmail.com
-          </p>
+          <a href="https://github.com/RehanTaneja/NSight" className="text-gray-100 hover:text-orange-300 hover:underline transition-colors">
+            Learn more at our Github
+          </a>
         </div>
       </footer>
     </div>
