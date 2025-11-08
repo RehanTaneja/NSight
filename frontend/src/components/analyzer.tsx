@@ -93,43 +93,67 @@ const handleUploadAndAnalyze = async () => {
         
         {/* File Upload Section */}
         <div className="space-y-4 mb-6">
+          {/* Model File Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Model File:
             </label>
+            
+            {/* Hidden file input */}
             <input
               type="file"
               onChange={handleModelFileChange}
-              className="border border-gray-200 rounded-md p-2 w-full"
+              className="hidden"
               accept=".onnx"
+              id="model-file-input"
             />
-            {modelFile && (
-              <p className="text-gray-700 mt-1">
-                Selected model: <span className="font-semibold">{modelFile.name}</span>
-              </p>
-            )}
+            
+            {/* Custom styled button/label */}
+            <label
+              htmlFor="model-file-input"
+              className="flex items-center justify-center cursor-pointer bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 w-full text-center hover:border-blue-400 hover:bg-blue-50 transition-colors group"
+            >
+              <svg className="w-6 h-6 text-gray-400 mr-2 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <span className="text-gray-600 group-hover:text-blue-600">
+                {modelFile ? `Selected: ${modelFile.name}` : 'Click to upload model file (.onnx)'}
+              </span>
+            </label>
           </div>
 
+          {/* Data File Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Data File:
             </label>
+            
+            {/* Hidden file input */}
             <input
               type="file"
               onChange={handleDataFileChange}
-              className="border border-gray-200 rounded-md p-2 w-full"
+              className="hidden"
               accept=".csv"
+              id="data-file-input"
             />
-            {dataFile && (
-              <p className="text-gray-700 mt-1">
-                Selected data: <span className="font-semibold">{dataFile.name}</span>
-              </p>
-            )}
+            
+            {/* Custom styled button/label */}
+            <label
+              htmlFor="data-file-input"
+              className="flex items-center justify-center cursor-pointer bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 w-full text-center hover:border-blue-400 hover:bg-blue-50 transition-colors group"
+            >
+              <svg className="w-6 h-6 text-gray-400 mr-2 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="text-gray-600 group-hover:text-blue-600">
+                {dataFile ? `Selected: ${dataFile.name}` : 'Click to upload data file (.csv)'}
+              </span>
+            </label>
           </div>
 
           <button
             onClick={handleUploadAndAnalyze}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 w-full"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 w-full"
             disabled={isUploadDisabled}
           >
             Upload and Analyze
@@ -175,13 +199,13 @@ const handleUploadAndAnalyze = async () => {
           <div className="text-center mb-6 ">
             <h3 className="text-2xl font-bold text-gray-800 mb-2">Waterfall Plot</h3>
             <p className="text-gray-600 text-sm">Feature importance visualization</p>
-            <Graph 
-              src={uploadResult.waterfall}
-              alt="SHAP Waterfall Plot"
-              className="w-full h-auto rounded-lg"
-              containerClassName="flex justify-center"
-            />
           </div>
+          <Graph 
+            src={uploadResult.waterfall}
+            alt="SHAP Waterfall Plot"
+            className="w-full h-auto rounded-lg"
+            containerClassName="flex justify-center"
+          />
         </div>
         
         {/* Bar Plot Container */}
@@ -190,12 +214,12 @@ const handleUploadAndAnalyze = async () => {
             <h3 className="text-2xl font-bold text-gray-800 mb-2">Bar Plot</h3>
             <p className="text-gray-600 text-sm">Feature contribution analysis</p>
           </div>
-            <Graph 
-              src={uploadResult.bar}
-              alt="SHAP Bar Plot" 
-              className="w-full h-auto rounded-lg"
-              containerClassName="flex justify-center"
-            />
+          <Graph 
+            src={uploadResult.bar}
+            alt="SHAP Bar Plot" 
+            className="w-full h-auto rounded-lg"
+            containerClassName="flex justify-center"
+          />
         </div>
 
       </div>

@@ -19,7 +19,7 @@ export default function Layout({ children, currentPage, setCurrentPage }: Layout
       <main className="mx-auto max-w-7xl">
         {children}
       </main>
-      <footer className="bg-gray-800 text-white py-8">
+      <footer className="bg-gray-800 text-white py-15">
         <div className="max-w-6xl mx-auto px-8 text-center">
           <p className="text-gray-400">
             Contact us: xxxx@gmail.com
