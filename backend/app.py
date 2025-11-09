@@ -10,7 +10,7 @@ import io
 import base64
 from functions import make_waterfall_plot, make_bar_plot
 from flask_cors import CORS
-from llm import analyze_model
+from llm import analyze_model,get_gemini_response
 
 
 class ONNXModelWrapper:
@@ -167,18 +167,15 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route("/test-cors")
 def test_cors():
-    print("test cors route just ran")
     return jsonify({"message": "CORS is working!"})
 
 @app.route("/<path:other>")
 def catch_all(other):
-    print("got the catch all")
     return send_from_directory(app.static_folder, other)
 
 
 @app.route("/")
 def index():
-    print("served the website")
     # Serve the index.html file from the React build
     return send_from_directory(app.static_folder, "index.html")
 
@@ -187,11 +184,40 @@ def index():
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+#Route to chatbot endpoint
+@app.route("/chat",methods=["POST"])
+def chatbot():
+    """Receive a prompt from the client, forward it to get_gemini_response, and
+    return the LLM response as JSON.
+
+    Expects JSON body: { "prompt": "..." }
+    Also accepts form data or query param named 'prompt' as fallback.
+    """
+    try:
+        # Prefer JSON body
+        data = request.get_json(silent=True)
+        prompt = None
+        if data and isinstance(data, dict):
+            prompt = data.get("prompt")
+
+        # Fallback to form data or query param
+        if not prompt:
+            prompt = request.form.get("prompt") or request.args.get("prompt")
+
+        if not prompt:
+            return jsonify({"error": "No prompt provided"}), 400
+
+        # Call the LLM wrapper and return its response
+        llm_response = get_gemini_response(prompt)
+
+        # Normalize response into JSON
+        return jsonify({"response": llm_response})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Route to handle file upload
 @app.route("/upload", methods=["POST"])
 def upload_file():
-    print("running the upload route!")
     if "model" not in request.files or "data" not in request.files:
         return jsonify({"error": "No model or data file part"}), 400
 
@@ -249,7 +275,6 @@ def upload_file():
     return jsonify({"error": "Invalid file format"}), 400
 
 def run_shap_analysis(model_path, data_path):
-    print("running shap analysis")
     # Load the model using onnxruntime
     session = ort.InferenceSession(model_path)
 
