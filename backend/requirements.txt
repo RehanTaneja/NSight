@@ -5,3 +5,5 @@ numpy
 matplotlib
 uwsgi
 flask_cors
+google.generativeai
+dotenv
