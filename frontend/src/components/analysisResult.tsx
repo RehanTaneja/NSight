@@ -4,6 +4,8 @@ import Graph from './graph';
 import ChatBot from './chatBot';
 import ChatTrigger from './chatTrigger';
 import { useChat } from '../hooks/useChat';
+import MarkdownViewer from './markdownView';
+
 
 // Match the context UploadResult interface exactly
 interface UploadResult {
