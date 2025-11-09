@@ -32,8 +32,9 @@ export default function ChatBot({ analysisData }: ChatBotProps) {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
 
-    await sendMessage(inputMessage, analysisData);
-    setInputMessage('');
+    const messageToSend = inputMessage;
+    setInputMessage(''); // Clear immediately before sending
+    await sendMessage(messageToSend, analysisData);
   };
 
   const suggestedQuestions: string[] = [
