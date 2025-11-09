@@ -1,16 +1,22 @@
 'use client';
 
 import Graph from './graph';
+<<<<<<< Updated upstream
 import MarkdownViewer from './markdownView';
 
+=======
+import ChatBot from './chatBot';
+import ChatTrigger from './chatTrigger';
+import { useChat } from '../hooks/useChat';
+>>>>>>> Stashed changes
 
 // Match the context UploadResult interface exactly
 interface UploadResult {
   waterfall: string;
   bar: string;
   summary?: string;
-  modelFilename?: string;  // Make optional to match context
-  dataFilename?: string;   // Make optional to match context
+  modelFilename?: string;
+  dataFilename?: string;
 }
 
 interface ErrorState {
@@ -32,7 +38,14 @@ export default function AnalysisResults({
   onClearResults, 
   onClearError 
 }: AnalysisResultsProps) {
-  
+  const { openChat } = useChat();
+
+  // Check if we have valid data for chatbot
+  const hasValidAnalysisData = uploadResult && 
+                              uploadResult.waterfall && 
+                              uploadResult.bar && 
+                              uploadResult.summary;
+
   // Error display component
   const ErrorDisplay = () => {
     if (!error.type) return null;
@@ -141,68 +154,98 @@ export default function AnalysisResults({
 
   // Results state
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">SHAP Analysis Results</h2>
-      
-      <div className="mb-6">
-        {/* Use fallback text if filenames are undefined */}
-        <p className="text-gray-700">
-          Model: <span className="font-semibold">{uploadResult.modelFilename || 'Not specified'}</span>
-        </p>
-        <p className="text-gray-700">
-          Data: <span className="font-semibold">{uploadResult.dataFilename || 'Not specified'}</span>
-        </p>
+    <>
+      <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-800">SHAP Analysis Results</h2>
+          
+          {/* AI Assistant Button - Only show when we have valid data */}
+          {hasValidAnalysisData && (
+            <button
+              onClick={openChat}
+              className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              <span>🤖</span>
+              <span>AI Assistant</span>
+            </button>
+          )}
+        </div>
         
-        {/* Re-upload button */}
-        <button
-          onClick={onClearResults}
-          className="mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-        >
-          Analyze New Files
-        </button>
-      </div>
+        <div className="mb-6">
+          {/* Use fallback text if filenames are undefined */}
+          <p className="text-gray-700">
+            Model: <span className="font-semibold">{uploadResult.modelFilename || 'Not specified'}</span>
+          </p>
+          <p className="text-gray-700">
+            Data: <span className="font-semibold">{uploadResult.dataFilename || 'Not specified'}</span>
+          </p>
+          
+          {/* Re-upload button */}
+          <button
+            onClick={onClearResults}
+            className="mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+          >
+            Analyze New Files
+          </button>
+        </div>
 
-      <div className="border-t border-gray-400 border-dotted w-4/5 mx-auto my-14"></div>
+        <div className="border-t border-gray-400 border-dotted w-4/5 mx-auto my-14"></div>
 
-      {/* Summary Section - Only show if summary exists */}
-      {/* Graph Components */}
-      <div className="flex flex-col items-center gap-8">
         {/* Summary Section - Only show if summary exists */}
+<<<<<<< Updated upstream
         {uploadResult.summary && (
           <div className="w-full max-w-4xl p-6 bg-blue-50 border border-blue-200 rounded-lg">
             <h3 className="font-semibold text-blue-800 mb-3 text-lg">AI Analysis Summary</h3>
             <MarkdownViewer markdownContent={uploadResult.summary} />
+=======
+        {/* Graph Components */}
+        <div className="flex flex-col items-center gap-8">
+          {/* Summary Section - Only show if summary exists */}
+          {uploadResult.summary && (
+            <div className="w-full max-w-4xl p-6 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="font-semibold text-blue-800 mb-3 text-lg">AI Analysis Summary</h3>
+              <p className="text-blue-700">{uploadResult.summary}</p>
+            </div>
+          )}
+          
+          {/* Waterfall Plot Container */}
+          <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-gradient-to-br from-blue-100 to-purple-100">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Waterfall Plot</h3>
+              <p className="text-gray-600 text-sm">Feature importance visualization</p>
+            </div>
+            <Graph 
+              src={uploadResult.waterfall}
+              alt="SHAP Waterfall Plot"
+              className="w-full h-auto rounded-lg"
+              containerClassName="flex justify-center"
+            />
+>>>>>>> Stashed changes
           </div>
-        )}
-        
-        {/* Waterfall Plot Container */}
-        <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-gradient-to-br from-blue-100 to-purple-100">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Waterfall Plot</h3>
-            <p className="text-gray-600 text-sm">Feature importance visualization</p>
+          
+          {/* Bar Plot Container */}
+          <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-gradient-to-br from-blue-100 to-purple-100">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Bar Plot</h3>
+              <p className="text-gray-600 text-sm">Feature contribution analysis</p>
+            </div>
+            <Graph 
+              src={uploadResult.bar}
+              alt="SHAP Bar Plot" 
+              className="w-full h-auto rounded-lg"
+              containerClassName="flex justify-center"
+            />
           </div>
-          <Graph 
-            src={uploadResult.waterfall}
-            alt="SHAP Waterfall Plot"
-            className="w-full h-auto rounded-lg"
-            containerClassName="flex justify-center"
-          />
-        </div>
-        
-        {/* Bar Plot Container */}
-        <div className="w-full max-w-4xl rounded-2xl border border-gray-300 p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-gradient-to-br from-blue-100 to-purple-100">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Bar Plot</h3>
-            <p className="text-gray-600 text-sm">Feature contribution analysis</p>
-          </div>
-          <Graph 
-            src={uploadResult.bar}
-            alt="SHAP Bar Plot" 
-            className="w-full h-auto rounded-lg"
-            containerClassName="flex justify-center"
-          />
         </div>
       </div>
-    </div>
+
+      {/* ChatBot Component - Only render when we have valid data */}
+      {hasValidAnalysisData && (
+        <ChatBot analysisData={uploadResult} />
+      )}
+
+      {/* Chat Trigger Button - Only show when we have valid data */}
+      {hasValidAnalysisData && <ChatTrigger />}
+    </>
   );
 }
