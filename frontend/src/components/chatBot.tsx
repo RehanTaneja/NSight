@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, type FormEvent } from 'react';
 import { type AnalysisData } from '../contexts/chatContext';
 import { useChat } from '../hooks/useChat';
+import MarkdownViewer from './markdownView';
 interface ChatBotProps {
   analysisData: AnalysisData;
 }
@@ -99,7 +100,9 @@ export default function ChatBot({ analysisData }: ChatBotProps) {
                   : 'bg-gray-100 text-gray-800 rounded-bl-none'
               }`}
             >
-              <p className="text-sm">{message.content}</p>
+              <div className="text-sm">
+                <MarkdownViewer markdownContent={message.content} />
+              </div>
               <p className={`text-xs mt-1 ${
                 message.role === 'user' ? 'text-blue-200' : 'text-gray-500'
               }`}>
