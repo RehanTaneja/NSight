@@ -244,7 +244,6 @@ def upload_file():
 
     return jsonify({"error": "Invalid file format"}), 400
 
-
 def run_shap_analysis(model_path, data_path):
     # Load the model using onnxruntime
     session = ort.InferenceSession(model_path)

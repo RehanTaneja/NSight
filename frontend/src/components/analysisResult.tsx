@@ -1,14 +1,9 @@
 'use client';
 
 import Graph from './graph';
-<<<<<<< Updated upstream
-import MarkdownViewer from './markdownView';
-
-=======
 import ChatBot from './chatBot';
 import ChatTrigger from './chatTrigger';
 import { useChat } from '../hooks/useChat';
->>>>>>> Stashed changes
 
 // Match the context UploadResult interface exactly
 interface UploadResult {
@@ -192,12 +187,6 @@ export default function AnalysisResults({
         <div className="border-t border-gray-400 border-dotted w-4/5 mx-auto my-14"></div>
 
         {/* Summary Section - Only show if summary exists */}
-<<<<<<< Updated upstream
-        {uploadResult.summary && (
-          <div className="w-full max-w-4xl p-6 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="font-semibold text-blue-800 mb-3 text-lg">AI Analysis Summary</h3>
-            <MarkdownViewer markdownContent={uploadResult.summary} />
-=======
         {/* Graph Components */}
         <div className="flex flex-col items-center gap-8">
           {/* Summary Section - Only show if summary exists */}
@@ -220,7 +209,6 @@ export default function AnalysisResults({
               className="w-full h-auto rounded-lg"
               containerClassName="flex justify-center"
             />
->>>>>>> Stashed changes
           </div>
           
           {/* Bar Plot Container */}
