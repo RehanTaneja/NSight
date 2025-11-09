@@ -107,10 +107,11 @@ function AnalyzerContent() {
           details: 'Unable to connect to the server. Please check if the backend service is running.'
         });
       } else {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         setError({
           type: 'upload',
           message: 'Upload failed',
-          details: f'An unexpected error occurred during file upload: {response}'
+          details: `An unexpected error occurred during file upload: ${errorMessage}`
         });
       }
       setUploadResult(null);
