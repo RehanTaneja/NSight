@@ -31,15 +31,16 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     memoizedSetIsLoading(true);
 
     try {
+      // Send to backend via /api proxy (matches upload endpoint pattern)
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message,
+          prompt: message,
           analysisData,
-          conversationId
+          conversationId,
         }),
       });
 
