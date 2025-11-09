@@ -1,6 +1,8 @@
 'use client';
 
 import Graph from './graph';
+import MarkdownViewer from './markdownView';
+
 
 // Match the context UploadResult interface exactly
 interface UploadResult {
@@ -169,7 +171,7 @@ export default function AnalysisResults({
         {uploadResult.summary && (
           <div className="w-full max-w-4xl p-6 bg-blue-50 border border-blue-200 rounded-lg">
             <h3 className="font-semibold text-blue-800 mb-3 text-lg">AI Analysis Summary</h3>
-            <p className="text-blue-700">{uploadResult.summary}</p>
+            <MarkdownViewer markdownContent={uploadResult.summary} />
           </div>
         )}
         
