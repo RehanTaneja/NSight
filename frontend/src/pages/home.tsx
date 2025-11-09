@@ -64,14 +64,14 @@ export default function HomePage() {
                 className="group relative bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden"
               >
                 <div className="p-8 space-y-4 ">
-                  <div className="flex flex-col items-center gap-4 text-center ">
+                  <div className="flex flex-col gap-4  ">
                     <h3 className="text-xl font-bold text-gray-800 flex items-center ">
                       <div className="text-4xl bg-gradient-to-br from-blue-100 to-purple-100 p-2 rounded-xl">
                         {feature.icon}
                       </div>
                       &nbsp;&nbsp;{feature.title}
                     </h3>
-                    <div className="text-center ">
+                    <div className="">
                       <p className="text-gray-700 text-base leading-relaxed break-words">
                         {feature.description}
                       </p>

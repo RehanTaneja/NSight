@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { useUpload } from '../hooks/useUpload';
+import { ChatProvider } from '../contexts/chatProvider';
 import FileUpload from './fileUpload';
 import AnalysisResults from './analysisResult';
 import SkeletonLoader from './skeletonLoader';
 
-export default function Analyzer() {
+// Inner component that uses the upload hook
+function AnalyzerContent() {
   const [modelFile, setModelFile] = useState<File | null>(null);
   const [dataFile, setDataFile] = useState<File | null>(null);
   const [error, setError] = useState<{
@@ -83,7 +85,7 @@ export default function Analyzer() {
         setUploadResult({
           waterfall: result.waterfall,
           bar: result.bar,
-          summary: result.summary, // Add the summary field
+          summary: result.summary, // Added the missing summary field
           modelFilename: modelFile.name,
           dataFilename: dataFile.name
         });
@@ -156,5 +158,14 @@ export default function Analyzer() {
       onClearResults={clearResults}
       onClearError={clearError}
     />
+  );
+}
+
+// Main export that wraps with ChatProvider
+export default function Analyzer() {
+  return (
+    <ChatProvider>
+      <AnalyzerContent />
+    </ChatProvider>
   );
 }
