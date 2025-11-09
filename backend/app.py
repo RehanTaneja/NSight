@@ -5,7 +5,6 @@ import pandas as pd
 import onnxruntime as ort
 from flask import Flask, request, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
-from werkzeug.middleware.proxy_fix import ProxyFix
 import matplotlib.pyplot as plt
 import io
 import base64
@@ -26,31 +25,137 @@ class ONNXModelWrapper:
         """
         self.session = ort.InferenceSession(onnx_path)
         self.input_name = self.session.get_inputs()[0].name
-        self.output_name = self.session.get_outputs()[0].name
         
-    def predict(self, X: np.ndarray) -> np.ndarray:
+        # Get all outputs (some models have multiple outputs)
+        outputs = self.session.get_outputs()
+        self.output_names = [output.name for output in outputs]
+        
+        # Use first output by default, or look for 'label' output for classifiers
+        self.output_name = self.output_names[0]
+        for name in self.output_names:
+            if 'label' in name.lower():
+                self.output_name = name
+                break
+        
+        self.class_mapping = {}  # Will map string labels to integers
+        print(f"ONNX Model initialized:")
+        print(f"  Input: {self.input_name}")
+        print(f"  Output: {self.output_name}")
+        print(f"  Available outputs: {self.output_names}")
+        
+    def predict(self, X) -> np.ndarray:
         """
         Make predictions using ONNX model.
         
         Args:
-            X: Input features as numpy array
+            X: Input features as numpy array or DataFrame
             
         Returns:
-            Predictions as numpy array
+            Predictions as numpy array (1D for regression/classification, 2D for probabilities)
         """
+        # Convert DataFrame to numpy if needed
+        if hasattr(X, 'values'):
+            X = X.values
+        
+        # Ensure X is numpy array
+        if not isinstance(X, np.ndarray):
+            X = np.array(X)
+        
         # Ensure X is float32 (ONNX typically expects this)
         if X.dtype != np.float32:
             X = X.astype(np.float32)
         
-        # Run inference
-        outputs = self.session.run([self.output_name], {self.input_name: X})
-        return outputs[0]
+        # Run inference - get all outputs
+        outputs = self.session.run(self.output_names, {self.input_name: X})
+        
+        # Try to find probability output for classifiers
+        result = None
+        for i, output_name in enumerate(self.output_names):
+            current_output = outputs[i]
+            
+            # Look for probability output (usually has 'probabilities' in name or is 2D)
+            if 'prob' in output_name.lower():
+                result = current_output
+                break
+            # If we find a 2D numeric array, it's likely probabilities
+            elif isinstance(current_output, np.ndarray) and len(current_output.shape) == 2:
+                if np.issubdtype(current_output.dtype, np.number):
+                    result = current_output
+                    break
+        
+        # If no probability output found, use the main output
+        if result is None:
+            result = outputs[self.output_names.index(self.output_name)]
+        
+        # Handle dict/map output format (common in sklearn->ONNX conversions)
+        if isinstance(result, (list, np.ndarray)) and len(result) > 0:
+            if isinstance(result[0], dict):
+                # Convert list of dicts to probability matrix
+                # Each dict maps class label -> probability
+                all_classes = sorted(set().union(*[d.keys() for d in result]))
+                
+                # Build class mapping if not exists
+                for cls in all_classes:
+                    if cls not in self.class_mapping:
+                        self.class_mapping[cls] = len(self.class_mapping)
+                
+                # Create probability matrix
+                prob_matrix = np.zeros((len(result), len(all_classes)))
+                for i, pred_dict in enumerate(result):
+                    for cls, prob in pred_dict.items():
+                        prob_matrix[i, self.class_mapping[cls]] = prob
+                
+                result = prob_matrix
+        
+        # Ensure result is a proper numpy array
+        if not isinstance(result, np.ndarray):
+            result = np.array(result)
+        
+        # Handle different output formats
+        if result.dtype == object:
+            # Check if it's strings
+            try:
+                first_elem = result.flat[0]
+                if isinstance(first_elem, str):
+                    # Output is strings (class labels) - convert to numeric indices
+                    unique_labels = np.unique(result)
+                    
+                    # Build or update class mapping
+                    for label in unique_labels:
+                        if label not in self.class_mapping:
+                            self.class_mapping[label] = len(self.class_mapping)
+                    
+                    # Convert strings to integers
+                    result = np.array([self.class_mapping[label] for label in result])
+            except:
+                pass
+        elif result.dtype.kind in ['U', 'S']:
+            # String array
+            unique_labels = np.unique(result)
+            
+            # Build or update class mapping
+            for label in unique_labels:
+                if label not in self.class_mapping:
+                    self.class_mapping[label] = len(self.class_mapping)
+            
+            # Convert strings to integers
+            result = np.array([self.class_mapping[label] for label in result])
+        
+        # Ensure it's a numeric type
+        if not np.issubdtype(result.dtype, np.number):
+            result = result.astype(np.float64)
+        
+        # Flatten if single column
+        if len(result.shape) == 2 and result.shape[1] == 1:
+            result = result.flatten()
+        
+        return result
     
-    def __call__(self, X: np.ndarray) -> np.ndarray:
+    def __call__(self, X) -> np.ndarray:
         """Allow calling the wrapper directly."""
         return self.predict(X)
 
-# Flask app setup
+# Flask epp setup
 app = Flask(__name__, static_folder="../frontend/dist/", static_url_path="/")
 CORS(app) 
 
@@ -104,7 +209,6 @@ def upload_file():
         # Save the uploaded files
         model_filepath = os.path.join(app.config["UPLOAD_FOLDER"], model_filename)
         data_filepath = os.path.join(app.config["UPLOAD_FOLDER"], data_filename)
-        print(model_filepath,data_filepath)
         model_file.save(model_filepath)
         data_file.save(data_filepath)
 
@@ -112,15 +216,18 @@ def upload_file():
         try:
             waterfall_image = make_waterfall_plot(model_filepath, data_filepath)
             bar_plot_image = make_bar_plot(model_filepath, data_filepath)
+            onnx_path = "uploads/decision_tree.onnx"
 
-            data = pd.read_csv(data_filepath)  # Assuming the data is in CSV format
-            wrapper = ONNXModelWrapper(model_filepath)
-            predictions_onnx = wrapper.predict(data)
+            X_train = pd.read_csv("uploads/train_X.csv")
+            wrapper = ONNXModelWrapper(onnx_path)
+            predictions_onnx = wrapper.predict(X_train)
             print(f"ONNX predictions shape: {predictions_onnx.shape}")
-
+            
+            # Analyze the ONNX model
+            print("\nAnalyzing ONNX model with SHAP...")
             data, summary = analyze_model(
-                model_or_path=model_filepath,
-                X_train=data,
+                model_or_path=onnx_path,
+                X_train=X_train,
                 predictions=predictions_onnx,
                 n_sample_explanations=3,
                 nsamples=50  # Lower for faster testing
@@ -129,7 +236,7 @@ def upload_file():
                 {
                     "waterfall": waterfall_image,
                     "bar": bar_plot_image,
-                    "summary": "summary",
+                    "summary": summary,
                 }
             )
         except Exception as e:
@@ -236,4 +343,4 @@ def run_shap_analysis(model_path, data_path):
 if __name__ == "__main__":
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.makedirs(app.config["UPLOAD_FOLDER"])
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True)
