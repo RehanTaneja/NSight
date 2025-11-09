@@ -167,15 +167,18 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route("/test-cors")
 def test_cors():
+    print("test cors route just ran")
     return jsonify({"message": "CORS is working!"})
 
 @app.route("/<path:other>")
 def catch_all(other):
+    print("got the catch all")
     return send_from_directory(app.static_folder, other)
 
 
 @app.route("/")
 def index():
+    print("served the website")
     # Serve the index.html file from the React build
     return send_from_directory(app.static_folder, "index.html")
 
@@ -188,6 +191,7 @@ def allowed_file(filename):
 # Route to handle file upload
 @app.route("/upload", methods=["POST"])
 def upload_file():
+    print("running the upload route!")
     if "model" not in request.files or "data" not in request.files:
         return jsonify({"error": "No model or data file part"}), 400
 
@@ -245,6 +249,7 @@ def upload_file():
     return jsonify({"error": "Invalid file format"}), 400
 
 def run_shap_analysis(model_path, data_path):
+    print("running shap analysis")
     # Load the model using onnxruntime
     session = ort.InferenceSession(model_path)
 
