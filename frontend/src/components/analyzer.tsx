@@ -110,7 +110,7 @@ function AnalyzerContent() {
         setError({
           type: 'upload',
           message: 'Upload failed',
-          details: 'An unexpected error occurred during file upload'
+          details: f'An unexpected error occurred during file upload: {response}'
         });
       }
       setUploadResult(null);
