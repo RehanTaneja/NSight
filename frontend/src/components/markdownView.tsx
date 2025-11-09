@@ -9,7 +9,6 @@ interface MarkdownViewerProps {
 const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ markdownContent }) => {
   return (
     <div>
-      <h1>Markdown Viewer</h1>
       <ReactMarkdown>{markdownContent}</ReactMarkdown>
     </div>
   );
