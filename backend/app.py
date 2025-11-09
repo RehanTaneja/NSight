@@ -5,13 +5,14 @@ import pandas as pd
 import onnxruntime as ort
 from flask import Flask, request, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 import matplotlib.pyplot as plt
 import io
 import base64
 from functions import make_waterfall_plot, make_bar_plot
 from flask_cors import CORS
 
-# Flask epp setup
+# Flask app setup
 app = Flask(__name__, static_folder="../frontend/dist/", static_url_path="/")
 CORS(app) 
 
@@ -185,4 +186,4 @@ def run_shap_analysis(model_path, data_path):
 if __name__ == "__main__":
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.makedirs(app.config["UPLOAD_FOLDER"])
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

@@ -3,3 +3,5 @@ onnxruntime
 pandas
 numpy
 matplotlib
+uwsgi
+flask_cors
