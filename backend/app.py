@@ -11,6 +11,44 @@ import io
 import base64
 from functions import make_waterfall_plot, make_bar_plot
 from flask_cors import CORS
+from llm import analyze_model
+
+
+class ONNXModelWrapper:
+    """Wrapper to make ONNX model compatible with SHAP."""
+    
+    def __init__(self, onnx_path: str):
+        """
+        Initialize ONNX model from file path.
+        
+        Args:
+            onnx_path: Path to the .onnx model file
+        """
+        self.session = ort.InferenceSession(onnx_path)
+        self.input_name = self.session.get_inputs()[0].name
+        self.output_name = self.session.get_outputs()[0].name
+        
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """
+        Make predictions using ONNX model.
+        
+        Args:
+            X: Input features as numpy array
+            
+        Returns:
+            Predictions as numpy array
+        """
+        # Ensure X is float32 (ONNX typically expects this)
+        if X.dtype != np.float32:
+            X = X.astype(np.float32)
+        
+        # Run inference
+        outputs = self.session.run([self.output_name], {self.input_name: X})
+        return outputs[0]
+    
+    def __call__(self, X: np.ndarray) -> np.ndarray:
+        """Allow calling the wrapper directly."""
+        return self.predict(X)
 
 # Flask app setup
 app = Flask(__name__, static_folder="../frontend/dist/", static_url_path="/")
@@ -66,7 +104,7 @@ def upload_file():
         # Save the uploaded files
         model_filepath = os.path.join(app.config["UPLOAD_FOLDER"], model_filename)
         data_filepath = os.path.join(app.config["UPLOAD_FOLDER"], data_filename)
-
+        print(model_filepath,data_filepath)
         model_file.save(model_filepath)
         data_file.save(data_filepath)
 
@@ -74,12 +112,24 @@ def upload_file():
         try:
             waterfall_image = make_waterfall_plot(model_filepath, data_filepath)
             bar_plot_image = make_bar_plot(model_filepath, data_filepath)
-            
+
+            data = pd.read_csv(data_filepath)  # Assuming the data is in CSV format
+            wrapper = ONNXModelWrapper(model_filepath)
+            predictions_onnx = wrapper.predict(data)
+            print(f"ONNX predictions shape: {predictions_onnx.shape}")
+
+            data, summary = analyze_model(
+                model_or_path=model_filepath,
+                X_train=data,
+                predictions=predictions_onnx,
+                n_sample_explanations=3,
+                nsamples=50  # Lower for faster testing
+            )
             return jsonify(
                 {
                     "waterfall": waterfall_image,
                     "bar": bar_plot_image,
-                    "summary": "sample text",
+                    "summary": "summary",
                 }
             )
         except Exception as e:
